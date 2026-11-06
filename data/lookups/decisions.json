@@ -1,0 +1,2071 @@
+{
+  "version": "0.4",
+  "parts": [
+    {
+      "id": "context-store",
+      "name": "Context store",
+      "summary": "The place where context is kept, and the form it is kept in."
+    },
+    {
+      "id": "context-scope",
+      "name": "Scope",
+      "summary": "The set of systems your context covers. It can be only the data platform, or every system that stores data."
+    },
+    {
+      "id": "context-capture",
+      "name": "Context capture",
+      "summary": "The way context gets from systems and people into the Context Plane."
+    },
+    {
+      "id": "context-model",
+      "name": "Context model",
+      "summary": "The types of thing your context holds, such as a term, a concept, a metric or a data contract, and the links between them."
+    },
+    {
+      "id": "context-language",
+      "name": "Context language",
+      "summary": "The words and structures that context is written in, and the translators that convert it to and from outside standards."
+    },
+    {
+      "id": "shared-terms",
+      "name": "Shared terms",
+      "summary": "The terms and concepts that more than one team uses, and the matching that stops one thing from becoming two."
+    },
+    {
+      "id": "change-control",
+      "name": "Change control",
+      "summary": "The rules for who can change context, and who approves a change."
+    },
+    {
+      "id": "agent-access",
+      "name": "Agent access",
+      "summary": "The service that lets an AI agent find and read context, for example an MCP server."
+    },
+    {
+      "id": "agent-instructions",
+      "name": "Agent instructions",
+      "summary": "The prompts and guardrails that tell an AI agent how to use the context."
+    },
+    {
+      "id": "interfaces",
+      "name": "Interfaces",
+      "summary": "The ways a person or a system works with context: an app, a chatbot, a command line tool or an API."
+    },
+    {
+      "id": "access-control",
+      "name": "Access control",
+      "summary": "The rules for who can see which context."
+    },
+    {
+      "id": "live-signals",
+      "name": "Live signals",
+      "summary": "The facts that change with every data load: quality scores, load times, row counts and usage."
+    },
+    {
+      "id": "execution",
+      "name": "Execution",
+      "summary": "The part that does the work. It generates code, runs queries and takes actions."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "context-location",
+      "order": 1,
+      "partId": "context-store",
+      "status": "draft",
+      "name": "Where context lives",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "Where does your context live?",
+      "whyItMatters": "Context is what a person or an AI agent needs to know to use your data correctly: the definitions, the rules, the metrics and who owns what. You choose whether all of it lives in one place, or stays with the teams and systems that create it. This choice shapes who can change context, how an agent finds it, and how you keep it consistent.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "centralised",
+          "name": "Centralised",
+          "diagram": "centralised",
+          "summary": "All context lives in one place, for example one repo or one store. Every team and every agent reads from that one place.",
+          "example": "The definition of MRR, the Customer concept and the Stripe data contracts all live in one context repo. The Finance Analytics team and the Product Analytics team both change them there.",
+          "gain": [
+            "People and agents have one place to look.",
+            "Each term has one definition, so a conflict between two teams shows up early.",
+            "You run one access model, one change process and one version history.",
+            "An agent needs one connection."
+          ],
+          "cost": [
+            "The team that owns the one place can become a bottleneck for every change.",
+            "Context sits away from the code and systems it describes, so it can go out of date.",
+            "Every team must accept one structure and one set of tools.",
+            "The one place grows large, so you need rules for how to find things in it."
+          ],
+          "fitsWhen": [
+            "You have a small number of teams.",
+            "One team already owns the data definitions.",
+            "A consistent answer matters more to you than team autonomy."
+          ],
+          "mapEffect": "store-centralised"
+        },
+        {
+          "id": "federated",
+          "name": "Federated",
+          "alsoCalled": [
+            "Decentralised"
+          ],
+          "diagram": "federated",
+          "summary": "Each team or system keeps its own context beside its own work. Nothing is copied to a central place. An agent reads from each place it needs.",
+          "example": "The Finance Analytics repo holds the definition of MRR. The Product Analytics repo holds the definition of an active user. The Data Engineering repo holds the Stripe data contracts.",
+          "gain": [
+            "Context lives beside the work it describes, so the people who know it are the people who change it.",
+            "No team waits on a central team.",
+            "Each team keeps its own tools and its own pace."
+          ],
+          "cost": [
+            "Two teams can define the same term in two ways, and nobody sees the conflict.",
+            "An agent must find and connect to many places.",
+            "Access rules, formats and quality differ from place to place.",
+            "Nobody has one view of all the context."
+          ],
+          "fitsWhen": [
+            "You have many teams that work independently.",
+            "The teams work in domains that share few terms.",
+            "A central team cannot keep up with the rate of change."
+          ],
+          "mapEffect": "store-federated"
+        },
+        {
+          "id": "hub-and-spoke",
+          "name": "Hub and spoke",
+          "diagram": "hub-and-spoke",
+          "summary": "Each team keeps its own context in its own place (a spoke). One central place (the hub) holds the context that every team shares, and an index of where the rest lives.",
+          "example": "The hub holds the Customer concept, the definition of MRR and a list of every spoke. The Finance Analytics spoke holds the detailed rules for recognised revenue.",
+          "gain": [
+            "Shared terms have one definition.",
+            "Teams keep control of the context that only they use.",
+            "An agent starts at the hub and follows the index to the spoke it needs."
+          ],
+          "cost": [
+            "You must decide what is shared and what is local, and keep deciding as things change.",
+            "You run two change processes: one for the hub and one for each spoke.",
+            "The index in the hub can go out of step with the spokes.",
+            "It has more moving parts than either of the other two patterns."
+          ],
+          "fitsWhen": [
+            "A few terms are shared by every team, and most of the detail is local.",
+            "Your repos already follow a hub and spoke layout."
+          ],
+          "mapEffect": "store-hub"
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "centralised",
+        "why": "",
+        "confirmed": true
+      },
+      "limits": [],
+      "sources": []
+    },
+    {
+      "id": "context-format",
+      "order": 2,
+      "partId": "context-store",
+      "status": "draft",
+      "name": "The format of context",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "What format is your context stored in?",
+      "whyItMatters": "Context must be stored in some form. The form decides who can write it, which tools can read it, and how an agent searches it.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "text-files",
+          "name": "Text files in a repo",
+          "alsoCalled": [
+            "Context as code"
+          ],
+          "summary": "Context is Markdown or YAML files in a Git repo. People change it the way they change code.",
+          "example": "The file metrics/mrr.yml holds the definition of MRR. A person in Finance Analytics changes it with a pull request.",
+          "gain": [
+            "An AI agent reads text files with no extra tools.",
+            "Git gives you history, review and branches.",
+            "Context sits beside the code it describes."
+          ],
+          "cost": [
+            "People who do not use Git find it hard to change.",
+            "A link between two files is only text, so it breaks unless something checks it.",
+            "It is hard to query. For example: list every metric that uses the Invoice concept."
+          ],
+          "fitsWhen": [
+            "The people who write context are comfortable with Git.",
+            "You have hundreds of pieces of context, not hundreds of thousands."
+          ]
+        },
+        {
+          "id": "database-records",
+          "name": "Records in a database",
+          "summary": "Each piece of context is a record with set fields. An app or an API reads and writes the records.",
+          "example": "MRR is one record of the type Metric, with fields for the name, the formula and the owner. People change it in a web app.",
+          "gain": [
+            "Anyone can change context in an app.",
+            "You can query, filter and check the context.",
+            "It handles a very large amount of context."
+          ],
+          "cost": [
+            "You must build or buy the app and the API.",
+            "An agent needs a service, for example an MCP server, to read it.",
+            "You must build history and review yourself."
+          ],
+          "fitsWhen": [
+            "Many of the people who write context do not write code.",
+            "Other software reads the context to do its work."
+          ]
+        },
+        {
+          "id": "graph",
+          "name": "Graph",
+          "alsoCalled": [
+            "Knowledge graph"
+          ],
+          "summary": "Context is stored as things and the links between them. The links matter as much as the things.",
+          "example": "The MRR metric links to the Subscription concept, to the raw.stripe.subscriptions data asset and to the SaaS Revenue Metrics Information Product.",
+          "gain": [
+            "You can follow the links to see what a change will break.",
+            "One thing can appear in many views without a copy.",
+            "A new kind of link is easy to add."
+          ],
+          "cost": [
+            "Fewer people know how to design and query a graph.",
+            "Without rules for which links are allowed, the graph gets messy.",
+            "You still need an app and a service for people and agents."
+          ],
+          "fitsWhen": [
+            "Your main questions are about how things relate.",
+            "The same thing is used in many places."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "change-approval",
+          "note": "Text files in a repo bring pull request review with them. A database or a graph needs its own approval steps."
+        },
+        {
+          "decisionId": "agent-read",
+          "note": "An agent can read text files directly. Records and graphs need a service between the agent and the store."
+        },
+        {
+          "decisionId": "object-types",
+          "note": "Records in a database need fixed fields, so they point you to fixed types."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Integrating Gemini CLI with the Context Plane",
+          "url": "https://agiledata.info/p/integrating-gemini-cli-with-the-context"
+        },
+        {
+          "title": "Background to the pattern of the Context Plane",
+          "url": "https://agiledata.info/p/background-to-the-pattern-of-the"
+        },
+        {
+          "title": "My AI Harness",
+          "url": "https://agiledata.info/p/my-ai-harness"
+        }
+      ]
+    },
+    {
+      "id": "context-coverage",
+      "order": 3,
+      "partId": "context-scope",
+      "status": "draft",
+      "name": "What context covers",
+      "map": {
+        "kind": "place",
+        "at": "sources"
+      },
+      "question": "What does your context cover?",
+      "whyItMatters": "A Context Plane can describe only the data in your data platform, or the data in every system you run. An AI agent can only use data correctly where it has context. This choice sets how much work you take on, and where an agent can go.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "data-platform-only",
+          "name": "Data platform only",
+          "alsoCalled": [
+            "Context layer",
+            "Semantic layer"
+          ],
+          "summary": "Context covers the data in your data platform. An agent that wants data from a source system goes through the data platform.",
+          "example": "The context describes the Stripe tables in BigQuery and the MRR metric. It says nothing about the Stripe API or the CRM.",
+          "gain": [
+            "The data platform team already owns most of this context.",
+            "You have one system to describe, so you can start small.",
+            "It matches the BI semantic layer that many teams already know."
+          ],
+          "cost": [
+            "An agent has no context for data that never reaches the data platform.",
+            "Every question waits until the data is collected into the data platform.",
+            "Context for the source systems stays in people's heads."
+          ],
+          "fitsWhen": [
+            "Most of your questions are answered from the data platform.",
+            "The data platform team is the only team ready to do this work."
+          ],
+          "mapEffect": "scope-platform"
+        },
+        {
+          "id": "every-system",
+          "name": "Every system",
+          "alsoCalled": [
+            "Context plane"
+          ],
+          "summary": "Context covers every system that stores data: the source systems, the data platform and the tools people use to read data. An agent can go to any of them directly.",
+          "example": "The context describes the Stripe API, the raw.stripe.invoices table in BigQuery and the SaaS Revenue Metrics dashboard in Looker. An agent that needs today's invoices reads them from Stripe.",
+          "gain": [
+            "An agent can use data where it lives. It does not wait for the data platform.",
+            "One place explains how the systems relate to each other.",
+            "Context can also help one system talk to another system."
+          ],
+          "cost": [
+            "You need context from teams and vendors outside the data team.",
+            "It is much more work to cover every system.",
+            "Source systems often hold no history, so some questions still need the data platform."
+          ],
+          "fitsWhen": [
+            "Your agents must act in source systems, not only read reports.",
+            "Your systems can provide their own context, for example through an MCP service."
+          ],
+          "mapEffect": "scope-all"
+        },
+        {
+          "id": "one-product",
+          "name": "One product at a time",
+          "summary": "Context covers only what one Information Product needs, across the systems that product touches. You add the next product when the first one works.",
+          "example": "You capture context for SaaS Revenue Metrics only. That is the Customer, Subscription and Invoice concepts, the MRR and ARR metrics, and the three Stripe data assets.",
+          "gain": [
+            "You get value from a small amount of context.",
+            "Each product shows you which context is worth the effort."
+          ],
+          "cost": [
+            "Early choices are made for one product and may not fit the next one.",
+            "Shared terms are defined before every team has seen them.",
+            "An agent has gaps outside the products you have done."
+          ],
+          "fitsWhen": [
+            "You want to prove value before you invest more.",
+            "One product has a clear owner and a clear need."
+          ],
+          "mapEffect": "scope-one"
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-location",
+          "note": "If context covers every system, one team cannot write all of it, so a fully centralised pattern gets harder."
+        },
+        {
+          "decisionId": "context-capture",
+          "note": "The more systems you cover, the less practical it is to build a harvest connection for each one."
+        },
+        {
+          "decisionId": "agent-execution",
+          "note": "If context covers only the data platform, an agent has no reason to call a source system's own service."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Context Plane not Context Layer",
+          "url": "https://agiledata.info/p/context-plane-not-context-layer"
+        },
+        {
+          "title": "The new AI Data Stack",
+          "url": "https://agiledata.info/p/the-new-ai-data-stack"
+        }
+      ]
+    },
+    {
+      "id": "context-capture",
+      "order": 4,
+      "partId": "context-capture",
+      "status": "draft",
+      "name": "How context gets in",
+      "map": {
+        "kind": "flow",
+        "at": "capture"
+      },
+      "question": "How does context get into your Context Plane?",
+      "whyItMatters": "Context starts somewhere: in a source system, in code, or in a person's head. You choose how it reaches the place where agents read it. This choice decides who does the work, and how fresh the context is.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "push",
+          "name": "Push",
+          "summary": "Each system sends its context to the Context Plane when the context changes.",
+          "example": "Data Engineering adds a column to raw.stripe.subscriptions. The pipeline sends the new column and its description to the Context Plane.",
+          "gain": [
+            "The Context Plane needs no connector for each system.",
+            "Context arrives when it changes, so it is fresh.",
+            "The team that owns the system owns its context."
+          ],
+          "cost": [
+            "Every system must be changed to send context.",
+            "A system that sends nothing is invisible.",
+            "You need one agreed format for what the systems send."
+          ],
+          "fitsWhen": [
+            "You control the systems, or your vendors support the format.",
+            "You cover many systems and cannot build a connector for each one."
+          ]
+        },
+        {
+          "id": "harvest",
+          "name": "Harvest",
+          "alsoCalled": [
+            "Pull",
+            "Crawl"
+          ],
+          "summary": "The Context Plane connects to each system on a schedule and copies the context it finds. This is the data catalogue pattern.",
+          "example": "Each night a connector reads the BigQuery schemas, the dbt models and the Looker dashboards, and copies what it finds.",
+          "gain": [
+            "The systems need no change.",
+            "You get wide coverage quickly.",
+            "It finds things that nobody remembered to write down."
+          ],
+          "cost": [
+            "You build and maintain a connector for every system.",
+            "Context is collected after the work is done, so it can be out of date.",
+            "It collects technical detail well and business meaning badly."
+          ],
+          "fitsWhen": [
+            "You have many existing systems that you cannot change.",
+            "You need a list of what exists before you do anything else."
+          ]
+        },
+        {
+          "id": "read-on-request",
+          "name": "Read on request",
+          "alsoCalled": [
+            "Virtualised"
+          ],
+          "summary": "The Context Plane keeps no copy. When an agent asks, it reads the context from the system at that moment.",
+          "example": "An agent asks what the status column in raw.stripe.subscriptions means. The Context Plane asks BigQuery for the column description and returns it.",
+          "gain": [
+            "The context is never out of date.",
+            "There is nothing to copy and nothing to keep in step."
+          ],
+          "cost": [
+            "Every system must answer context questions quickly, at any time.",
+            "You cannot search across all context in one step.",
+            "When a system is down, its context is gone too."
+          ],
+          "fitsWhen": [
+            "Your systems already serve their own context.",
+            "Your context changes often."
+          ],
+          "mapEffect": "capture-on-request"
+        },
+        {
+          "id": "written-in-place",
+          "name": "Written in place",
+          "summary": "People write the context in the Context Plane itself, before or while they do the work. Nothing is copied from another system.",
+          "example": "The Finance Analytics team fills in an Information Product Canvas for SaaS Revenue Metrics. They write the definition of MRR before any table is built.",
+          "gain": [
+            "You capture the reason behind the data, which no system holds.",
+            "Context exists before the data work starts, so it can guide the work."
+          ],
+          "cost": [
+            "People must do the writing.",
+            "The context can drift away from what was built.",
+            "It does not scale to thousands of columns."
+          ],
+          "fitsWhen": [
+            "The context is business meaning, not technical detail.",
+            "You design before you build."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-location",
+          "note": "Read on request only works with a federated pattern, because nothing is copied to a central place."
+        },
+        {
+          "decisionId": "context-role",
+          "note": "Harvested context arrives after the work is done, so it cannot drive the work."
+        },
+        {
+          "decisionId": "live-signals",
+          "note": "Signals stored with the context need a push from every system that runs data work."
+        }
+      ],
+      "sources": [
+        {
+          "title": "The new AI Data Stack",
+          "url": "https://agiledata.info/p/the-new-ai-data-stack"
+        },
+        {
+          "title": "Background to the pattern of the Context Plane",
+          "url": "https://agiledata.info/p/background-to-the-pattern-of-the"
+        },
+        {
+          "title": "contextplane.ai: Use Case",
+          "url": "https://contextplane.ai/use-case/"
+        }
+      ]
+    },
+    {
+      "id": "object-types",
+      "order": 5,
+      "partId": "context-model",
+      "status": "draft",
+      "name": "How fixed the types are",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "How fixed are the types of thing in your context?",
+      "whyItMatters": "A Context Plane holds many types of thing: a term, a concept, a metric, a data contract, a rule. You choose whether those types are fixed in advance, defined by each team, or not defined at all. This choice decides how much a person or an agent can rely on the structure.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "fixed-types",
+          "name": "Fixed types",
+          "summary": "You decide a set list of types. Each type has its own fields and its own allowed links.",
+          "example": "A Metric always has a name, a formula and an owner. A Metric can link to a Concept. It cannot link to a Persona until you add that rule.",
+          "gain": [
+            "People and agents know what to expect of each type.",
+            "Software can check and use the context, because the shape is known.",
+            "A type means the same thing in every team."
+          ],
+          "cost": [
+            "Someone must design the types, and that takes time.",
+            "A new type needs a design decision and a software change.",
+            "An outside standard may not match your types, so you must translate."
+          ],
+          "fitsWhen": [
+            "Software will generate code or checks from the context.",
+            "You want every team to use the same words."
+          ]
+        },
+        {
+          "id": "flexible-types",
+          "name": "Flexible types",
+          "alsoCalled": [
+            "Thing is a thing of a thing"
+          ],
+          "summary": "The store holds generic things. Each team defines its own types, fields and links as configuration.",
+          "example": "Finance Analytics adds a type called Revenue Rule with five fields. Product Analytics adds a type called Experiment. No software changes.",
+          "gain": [
+            "Any team can model anything without waiting.",
+            "It can fit any standard or method."
+          ],
+          "cost": [
+            "Two teams can model the same thing in two ways.",
+            "Software cannot rely on a shape, so each use needs its own configuration.",
+            "Someone must govern the configuration, or the model becomes a mess."
+          ],
+          "fitsWhen": [
+            "Your teams have very different needs.",
+            "You have people whose job is to govern the model."
+          ]
+        },
+        {
+          "id": "free-text",
+          "name": "Free text",
+          "summary": "Context is documents. There are no types, only headings and prose.",
+          "example": "A page called Revenue describes MRR, ARR and churn in paragraphs, with a link to the Stripe data contracts.",
+          "gain": [
+            "Anyone can write it today.",
+            "An AI agent reads prose well.",
+            "It holds reasons and stories that do not fit in fields."
+          ],
+          "cost": [
+            "Nothing checks that the context is complete or consistent.",
+            "Software cannot reliably generate anything from it.",
+            "An agent must read a lot of text to find one fact."
+          ],
+          "fitsWhen": [
+            "You are just starting.",
+            "Your context is mostly reasons and background."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-format",
+          "note": "Free text points you to text files. Fixed types point you to records or a graph."
+        },
+        {
+          "decisionId": "context-role",
+          "note": "Context can only drive code generation when the types are fixed."
+        },
+        {
+          "decisionId": "context-language",
+          "note": "With flexible types each team can adopt a different standard, so one common language is harder."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Things and Thing Types in the Context Plane",
+          "url": "https://agiledata.info/p/things-and-thing-types-in-the-context"
+        },
+        {
+          "title": "Things in the Context Plane",
+          "url": "https://agiledata.info/p/things-in-the-context-plane"
+        }
+      ]
+    },
+    {
+      "id": "context-first",
+      "order": 6,
+      "partId": "context-model",
+      "status": "draft",
+      "name": "Which context comes first",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "Which context do you capture first?",
+      "whyItMatters": "Context comes in four broad categories. Business context is the questions, terms and concepts. Structural context is the tables, columns and rules. Operational context is the live signals, such as quality scores. Agent context is the prompts and guardrails for AI agents. Nobody captures all of it at once, so you choose where to start.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "business-first",
+          "name": "Business context first",
+          "summary": "Start with the questions, the terms, the concepts and the Information Products. Technical detail comes later.",
+          "example": "You write the business questions the CRO asks. You define Customer, Subscription and MRR. You fill in the canvas for SaaS Revenue Metrics.",
+          "gain": [
+            "You capture the reason behind the data, which no system holds.",
+            "Business people can take part from the first day.",
+            "It gives an agent the meaning it cannot guess."
+          ],
+          "cost": [
+            "People must write it. It cannot be copied from a system.",
+            "An agent cannot yet find the table that holds the answer.",
+            "The value is hard to show until the context connects to data."
+          ],
+          "fitsWhen": [
+            "Your teams argue about what terms mean.",
+            "You are designing something new."
+          ]
+        },
+        {
+          "id": "structural-first",
+          "name": "Structural context first",
+          "alsoCalled": [
+            "Technical metadata first"
+          ],
+          "summary": "Start with tables, columns, data types, transformation code and data quality rules. Most of it can be copied from your systems.",
+          "example": "You load every table and column from BigQuery, and the dbt code that builds them.",
+          "gain": [
+            "It is fast, because much of it can be harvested.",
+            "An agent can find data and trace a change from source to report."
+          ],
+          "cost": [
+            "It says what exists, not what it means or why.",
+            "A column name with no description helps an agent very little.",
+            "The volume is large, and most of it is never used."
+          ],
+          "fitsWhen": [
+            "Your first use is to find data, or to see the impact of a change.",
+            "Your systems already hold good technical detail."
+          ]
+        },
+        {
+          "id": "use-case-first",
+          "name": "One use case first",
+          "summary": "Pick one job that costs you time. Capture only the context that job needs, from any category.",
+          "example": "The job is: show what breaks when a Stripe field changes. You capture the data dictionary, the transformation rules and the dashboards, and nothing else.",
+          "gain": [
+            "Every piece of context you capture is used.",
+            "You can show the value of the work quickly."
+          ],
+          "cost": [
+            "The context has gaps everywhere else.",
+            "The next use case may need the model to change.",
+            "It is hard to explain what your Context Plane covers."
+          ],
+          "fitsWhen": [
+            "You must prove value to get more time.",
+            "You know which job costs you the most time."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-capture",
+          "note": "Business context must be written by people. Structural context can be pushed or harvested."
+        },
+        {
+          "decisionId": "context-coverage",
+          "note": "One use case first leads you to cover one product at a time."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Background to the pattern of the Context Plane",
+          "url": "https://agiledata.info/p/background-to-the-pattern-of-the"
+        },
+        {
+          "title": "Things and Thing Types in the Context Plane",
+          "url": "https://agiledata.info/p/things-and-thing-types-in-the-context"
+        },
+        {
+          "title": "contextplane.ai: Use Case",
+          "url": "https://contextplane.ai/use-case/"
+        }
+      ]
+    },
+    {
+      "id": "context-language",
+      "order": 7,
+      "partId": "context-language",
+      "status": "draft",
+      "name": "The language of context",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "What language do you write context in?",
+      "whyItMatters": "Many standards describe context: for data contracts, for metrics, for glossaries and for catalogues. No single standard covers everything, and each tool prefers its own. You choose which words and structures your own context uses, and how it talks to tools that use other ones.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "own-language",
+          "name": "Your own language, with translators",
+          "summary": "You define your own words and types for context. A translator converts to and from each outside standard when a tool needs it.",
+          "example": "Your context has a Metric called MRR. One translator writes it out as a dbt MetricFlow metric. A second translator writes it out in the OSI format for a BI tool.",
+          "gain": [
+            "Your context uses the words your people already use.",
+            "A standard can change or die, and your core context stays the same.",
+            "You define a thing once and write it out for many tools."
+          ],
+          "cost": [
+            "You must design your own language.",
+            "You build and maintain a translator for each standard.",
+            "A translator can lose detail that your language does not hold."
+          ],
+          "fitsWhen": [
+            "You use several tools that follow different standards.",
+            "You already have a strong shared vocabulary."
+          ]
+        },
+        {
+          "id": "one-standard",
+          "name": "One outside standard",
+          "summary": "You adopt one published standard as the language for your context. Everything is written in that standard.",
+          "example": "Every data contract is an ODCS file. A tool that reads ODCS uses the Stripe contracts with no conversion.",
+          "gain": [
+            "You do no design work.",
+            "Tools, documents and training already exist.",
+            "It is easy to exchange context with another organisation that uses the standard."
+          ],
+          "cost": [
+            "Each standard covers one area, so you need a second standard for the rest.",
+            "Your words must change to match the words of the standard.",
+            "When the standard changes direction, your context must change too."
+          ],
+          "fitsWhen": [
+            "One area, for example data contracts, is most of your need.",
+            "Your main tools already use that standard."
+          ]
+        },
+        {
+          "id": "tool-languages",
+          "name": "Each tool's own language",
+          "summary": "Context stays in the form that each tool uses. There is no common language.",
+          "example": "Metric definitions are in dbt. Dashboard definitions are in Looker. Table descriptions are in BigQuery.",
+          "gain": [
+            "There is no translation work.",
+            "Each tool can use all of its own features.",
+            "Teams keep working the way they work today."
+          ],
+          "cost": [
+            "An agent must understand the language of every tool.",
+            "The same metric can be defined in two tools in two ways.",
+            "When you replace a tool, you rewrite its context."
+          ],
+          "fitsWhen": [
+            "You have few tools.",
+            "The context in each tool is used only inside that tool."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "object-types",
+          "note": "One outside standard brings its own fixed types with it."
+        },
+        {
+          "decisionId": "shared-terms",
+          "note": "If each tool keeps its own language, a shared term must be mapped across the tools."
+        }
+      ],
+      "sources": [
+        {
+          "title": "The new AI Data Stack",
+          "url": "https://agiledata.info/p/the-new-ai-data-stack"
+        },
+        {
+          "title": "Background to the pattern of the Context Plane",
+          "url": "https://agiledata.info/p/background-to-the-pattern-of-the"
+        }
+      ]
+    },
+    {
+      "id": "shared-terms",
+      "order": 8,
+      "partId": "shared-terms",
+      "status": "draft",
+      "name": "Keeping shared terms consistent",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "How do you keep a shared term consistent across teams?",
+      "whyItMatters": "Teams use the same word for different things. Finance and Product can both say MRR and mean different numbers. An AI agent that picks the wrong meaning gives a wrong answer and sounds sure about it. You choose what happens when two meanings meet.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "one-agreed-definition",
+          "name": "One agreed definition",
+          "summary": "Each term has one definition for the whole organisation. The teams must agree before the term is marked as agreed.",
+          "example": "Finance Analytics and Product Analytics agree one definition of MRR. Until they agree, the term has the status Disagreement, with a note on who means what.",
+          "gain": [
+            "An agent gets one answer.",
+            "A disagreement is visible, and someone owns it.",
+            "Reports from different teams match."
+          ],
+          "cost": [
+            "Agreement takes time, and sometimes needs a senior decision.",
+            "One team may have to change its reports.",
+            "Some terms really do need two meanings."
+          ],
+          "fitsWhen": [
+            "The term is used in reports that go to the board or outside the organisation.",
+            "You have few shared terms and a way to make decisions."
+          ]
+        },
+        {
+          "id": "definition-per-team",
+          "name": "A definition for each team",
+          "alsoCalled": [
+            "Bounded context"
+          ],
+          "summary": "Each team keeps its own definition. The term always carries the name of the team or domain that owns it.",
+          "example": "Finance MRR counts recognised revenue. Product MRR counts every live subscription. Both exist, and each one names its owner.",
+          "gain": [
+            "No team waits for agreement.",
+            "Each definition is correct for the people who use it."
+          ],
+          "cost": [
+            "An agent must know which team's meaning the question needs.",
+            "Two numbers with the same name do not match.",
+            "The count of terms grows with each team."
+          ],
+          "fitsWhen": [
+            "Your teams work on separate questions.",
+            "The different meanings are real, not accidents."
+          ]
+        },
+        {
+          "id": "mapped-terms",
+          "name": "One shared term, mapped local terms",
+          "summary": "The organisation agrees a short list of shared terms. Each team keeps its own terms and maps them to a shared term, as an alias or as a narrower term.",
+          "example": "The shared term is MRR. Finance's Recognised MRR and Product's Live Subscription MRR are both mapped to it as narrower terms.",
+          "gain": [
+            "Shared reports use the shared term, and teams keep their own words.",
+            "An agent can translate between a team's term and the shared term."
+          ],
+          "cost": [
+            "Someone must keep the mappings up to date.",
+            "You maintain three things: shared terms, local terms and mappings.",
+            "A wrong mapping is hard to see."
+          ],
+          "fitsWhen": [
+            "Your context follows a hub and spoke layout.",
+            "A few terms cross every team, and most terms do not."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-location",
+          "note": "One agreed definition needs one place that holds it, so it does not fit a purely federated pattern."
+        },
+        {
+          "decisionId": "change-approval",
+          "note": "One agreed definition needs someone who can approve a change to a shared term."
+        },
+        {
+          "decisionId": "same-thing-matching",
+          "note": "A definition for each team means two things share a name, so you cannot match by name."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Things in the Context Plane",
+          "url": "https://agiledata.info/p/things-in-the-context-plane"
+        }
+      ]
+    },
+    {
+      "id": "same-thing-matching",
+      "order": 9,
+      "partId": "shared-terms",
+      "status": "draft",
+      "name": "Matching the same thing",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "How do you know that two pieces of context are the same thing?",
+      "whyItMatters": "The Customer concept appears on a canvas, in a glossary and in a data contract. When context arrives from two places, something must decide whether it is one Customer or two. A wrong answer gives you duplicates, or two different things merged into one.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "match-by-name",
+          "name": "Match by name",
+          "summary": "Two things of the same type with the same name are the same thing. Upper case and lower case do not matter.",
+          "example": "You import a canvas with a persona called Chief Revenue Officer. A persona with that name exists, so the import links to it and creates nothing.",
+          "gain": [
+            "It needs no setup.",
+            "It works across tools that share nothing else.",
+            "People can predict the result."
+          ],
+          "cost": [
+            "A rename breaks the match.",
+            "Two things with the same name are merged, even when they differ.",
+            "CRO and Chief Revenue Officer become two things."
+          ],
+          "fitsWhen": [
+            "Your names are agreed and stable.",
+            "Context arrives as files from tools that share no keys."
+          ]
+        },
+        {
+          "id": "match-by-key",
+          "name": "Match by key",
+          "summary": "Each thing has a key that never changes. Two things are the same only when they have the same key.",
+          "example": "The Customer concept has the key concept-customer. Every tool that refers to Customer stores that key, so a rename changes nothing.",
+          "gain": [
+            "A rename is safe.",
+            "Two things can share a name and stay separate.",
+            "Software can rely on the match."
+          ],
+          "cost": [
+            "Every tool must store and send the key.",
+            "Someone must issue the keys, and that means one central register.",
+            "Context created outside the register has no key."
+          ],
+          "fitsWhen": [
+            "You control the tools.",
+            "Names change often, or one name is used for different things."
+          ]
+        },
+        {
+          "id": "match-by-review",
+          "name": "A person decides",
+          "summary": "The software suggests possible matches. A person confirms each one.",
+          "example": "An import finds Client in one glossary and Customer in another glossary. It asks the steward whether they are the same term.",
+          "gain": [
+            "It catches matches that names and keys miss.",
+            "A person makes the call on the hard cases."
+          ],
+          "cost": [
+            "It is slow, and it does not scale.",
+            "The result depends on who does the review.",
+            "An import waits for a person."
+          ],
+          "fitsWhen": [
+            "You merge context from sources that grew apart.",
+            "A wrong merge is costly."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-location",
+          "note": "Match by key needs one central register of keys, so it fits a centralised or a hub and spoke pattern."
+        },
+        {
+          "decisionId": "shared-terms",
+          "note": "Match by name merges two team definitions that share a name, so it does not fit a definition for each team."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Creating and Updating Context via an AI Agent Tool",
+          "url": "https://agiledata.info/p/creating-and-updating-context-via"
+        }
+      ]
+    },
+    {
+      "id": "change-approval",
+      "order": 10,
+      "partId": "change-control",
+      "status": "draft",
+      "name": "Who changes context",
+      "map": {
+        "kind": "flow",
+        "at": "change"
+      },
+      "question": "Who can change context, and who approves a change?",
+      "whyItMatters": "Context changes all the time. A metric gets a new rule, or a column gets a new meaning. Every agent and every report that reads the context sees the change. You choose how much checking a change gets before everyone sees it.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "open-edit",
+          "name": "Open edit",
+          "summary": "Anyone with access can change any context. The change is live at once. A history shows who changed what.",
+          "example": "A RevOps Analyst corrects the description of the churn metric in the app. Everyone sees the new text straight away.",
+          "gain": [
+            "It is the fastest pattern.",
+            "A mistake gets fixed by the first person who sees it.",
+            "There is no queue and no bottleneck."
+          ],
+          "cost": [
+            "A wrong change reaches every agent at once.",
+            "Nobody is clearly responsible for a definition.",
+            "Two people can change the same thing in opposite directions."
+          ],
+          "fitsWhen": [
+            "You are a small team and you trust each other.",
+            "Out-of-date context costs you more than a wrong change."
+          ]
+        },
+        {
+          "id": "owner-approves",
+          "name": "Owner approves",
+          "alsoCalled": [
+            "Steward approves"
+          ],
+          "summary": "Each piece of context has a named owner. Anyone can propose a change. The owner approves it before it is live.",
+          "example": "A Product Analyst proposes a change to MRR. The Finance Analytics team owns MRR, and approves or rejects the change.",
+          "gain": [
+            "Each definition has a responsible person.",
+            "The people who know the subject check the change.",
+            "Anyone can still contribute."
+          ],
+          "cost": [
+            "Every piece of context needs an owner, and owners leave.",
+            "A slow owner blocks a change.",
+            "You need a status for each change: draft, proposed and approved."
+          ],
+          "fitsWhen": [
+            "Context lives with the teams.",
+            "It is clear who knows each subject."
+          ]
+        },
+        {
+          "id": "curator-approves",
+          "name": "Central curator approves",
+          "summary": "One person or one small team reviews every proposed change, and decides where it belongs.",
+          "example": "Any team sends a proposed change to an inbox. The curator in Data Engineering accepts it, rejects it or holds it.",
+          "gain": [
+            "There is one consistent standard.",
+            "The curator sees a conflict between two teams.",
+            "It is simple to explain."
+          ],
+          "cost": [
+            "The curator is a bottleneck.",
+            "The curator cannot know every subject.",
+            "Teams stop proposing changes when the queue is slow."
+          ],
+          "fitsWhen": [
+            "Your context is centralised.",
+            "Consistency matters more to you than speed."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-location",
+          "note": "A central curator fits a centralised pattern. Owner approval fits a federated pattern, because each team approves its own context."
+        },
+        {
+          "decisionId": "agent-write",
+          "note": "With open edit, an agent that can write changes live context with no check."
+        }
+      ],
+      "sources": [
+        {
+          "title": "My AI Harness",
+          "url": "https://agiledata.info/p/my-ai-harness"
+        }
+      ]
+    },
+    {
+      "id": "agent-write",
+      "order": 11,
+      "partId": "change-control",
+      "status": "draft",
+      "name": "Agents that change context",
+      "map": {
+        "kind": "flow",
+        "at": "write"
+      },
+      "question": "Can an AI agent change your context?",
+      "whyItMatters": "An agent that can read context can also be given tools to create and update it. That saves people time. It also means a wrong change can be made quickly and many times. An agent can also report a change that it did not make.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "read-only",
+          "name": "Read only",
+          "summary": "Agents can search and read context. Only people change it.",
+          "example": "An agent explains what breaks if the Stripe invoice status field changes. A Data Engineer makes the change in the app.",
+          "gain": [
+            "An agent cannot damage the context.",
+            "It is simple to secure.",
+            "You prove that reading works before you take the risk of writing."
+          ],
+          "cost": [
+            "People do all the writing.",
+            "An agent that finds a gap cannot fill it."
+          ],
+          "fitsWhen": [
+            "You are starting.",
+            "People do not yet trust what the agent says."
+          ],
+          "mapEffect": "write-none"
+        },
+        {
+          "id": "agent-proposes",
+          "name": "Agent proposes, person approves",
+          "summary": "An agent drafts new context or a change. The draft is saved as a draft. A person reviews it and makes it live.",
+          "example": "An agent reads the Stripe schema and drafts descriptions for 40 columns. A Data Engineer reviews them and approves them.",
+          "gain": [
+            "The agent does the slow writing.",
+            "A person stays responsible.",
+            "A wrong draft is stopped before anyone else sees it."
+          ],
+          "cost": [
+            "You need a draft status and a review step.",
+            "Review becomes the bottleneck.",
+            "People can approve without reading."
+          ],
+          "fitsWhen": [
+            "You have a large amount of context to write.",
+            "You already have an approval process."
+          ],
+          "mapEffect": "write-proposes"
+        },
+        {
+          "id": "agent-writes",
+          "name": "Agent writes directly",
+          "summary": "An agent has tools that create and update live context. It has the same rights as the person who runs it.",
+          "example": "A Data Engineer tells an agent to create a data asset for raw.stripe.refunds. The agent creates it, and it is live.",
+          "gain": [
+            "It is the fastest pattern.",
+            "People who prefer to work through an agent need no app.",
+            "Any agent tool that can call the service can do the work."
+          ],
+          "cost": [
+            "A wrong change is live at once.",
+            "An agent can report a change that it did not make, so you must check.",
+            "Context written by an agent can drift from the source it describes."
+          ],
+          "fitsWhen": [
+            "The person who runs the agent is skilled and checks the result.",
+            "You have a history that lets you undo a change."
+          ],
+          "mapEffect": "write-direct"
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "change-approval",
+          "note": "Owner approval or curator approval needs the agent to save a draft, not a live change."
+        },
+        {
+          "decisionId": "agent-tool-count",
+          "note": "Read only is enforced by leaving the write tools out of the set an agent gets."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Creating and Updating Context via an AI Agent Tool",
+          "url": "https://agiledata.info/p/creating-and-updating-context-via"
+        },
+        {
+          "title": "contextplane.ai: Use Case",
+          "url": "https://contextplane.ai/use-case/"
+        }
+      ]
+    },
+    {
+      "id": "agent-read",
+      "order": 12,
+      "partId": "agent-access",
+      "status": "draft",
+      "name": "How agents read context",
+      "map": {
+        "kind": "flow",
+        "at": "read"
+      },
+      "question": "How does an AI agent find and read your context?",
+      "whyItMatters": "An agent starts each task knowing nothing about your organisation. It can only use the context it can reach, and only as much as fits in its working memory. You choose how context reaches the agent.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "tools-on-request",
+          "name": "Tools on request",
+          "alsoCalled": [
+            "MCP server"
+          ],
+          "summary": "A service offers tools such as search and get. The agent calls a tool when it needs a piece of context.",
+          "example": "A user asks which data contracts cover invoices. The agent calls the search tool, then reads the Stripe invoices contract.",
+          "gain": [
+            "The agent loads only what the task needs.",
+            "Any agent tool that supports the protocol can connect.",
+            "The context is always current, and access rules apply to each call."
+          ],
+          "cost": [
+            "You build and run the service.",
+            "The agent must choose the right tool, and sometimes it does not.",
+            "Each call takes time, and one task can need many calls."
+          ],
+          "fitsWhen": [
+            "You have more context than fits in an agent's working memory.",
+            "Your people use different agent tools."
+          ]
+        },
+        {
+          "id": "loaded-at-start",
+          "name": "Loaded at the start",
+          "summary": "A set of context files is given to the agent at the start of every session.",
+          "example": "Every session in the Finance Analytics repo starts with a file that defines MRR, ARR and churn, and names the Stripe tables.",
+          "gain": [
+            "The agent always has the context. It cannot forget to look.",
+            "There is nothing to build. A text file is enough."
+          ],
+          "cost": [
+            "It uses the agent's working memory in every session, needed or not.",
+            "Only a small amount fits.",
+            "Each repo has its own copy, and a copy can go out of date."
+          ],
+          "fitsWhen": [
+            "The context is small and almost every task needs it.",
+            "The context is rules, not reference detail."
+          ]
+        },
+        {
+          "id": "search-index",
+          "name": "Search an index",
+          "alsoCalled": [
+            "RAG"
+          ],
+          "summary": "All context is indexed so it can be searched by meaning. For each question, the closest pieces are found and given to the agent.",
+          "example": "A user asks about revenue lost when customers leave. The search finds the definitions of churn and Net Revenue Retention, although the question used neither term.",
+          "gain": [
+            "It works on free text and documents.",
+            "It finds context when the words differ."
+          ],
+          "cost": [
+            "It returns what is similar, and that is not always what is correct.",
+            "It loses the links between things, such as which table feeds which metric.",
+            "You run an index and keep it fresh."
+          ],
+          "fitsWhen": [
+            "Your context is mostly documents.",
+            "People ask questions in everyday words."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "agent-tool-count",
+          "note": "The count of tools only matters when you choose tools on request."
+        },
+        {
+          "decisionId": "context-visibility",
+          "note": "Context loaded at the start is the same for everyone who uses the repo, so you cannot apply a rule to one person."
+        },
+        {
+          "decisionId": "context-format",
+          "note": "Loaded at the start needs context as text files. Search an index suits free text."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Integrating Gemini CLI with the Context Plane",
+          "url": "https://agiledata.info/p/integrating-gemini-cli-with-the-context"
+        },
+        {
+          "title": "Creating and Updating Context via an AI Agent Tool",
+          "url": "https://agiledata.info/p/creating-and-updating-context-via"
+        }
+      ]
+    },
+    {
+      "id": "agent-tool-count",
+      "order": 13,
+      "partId": "agent-access",
+      "status": "draft",
+      "name": "How many agent tools",
+      "map": {
+        "kind": "place",
+        "at": "agent"
+      },
+      "question": "How many tools do you give an AI agent?",
+      "whyItMatters": "Each tool an agent can call is one more thing it must read and choose between. More tools let the agent do more. More tools also make the agent slower and more likely to choose the wrong one.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "every-tool",
+          "name": "Every tool",
+          "summary": "Every operation the service has is offered to every agent as a tool.",
+          "example": "The agent can see every operation of the context service, from list the data assets to export a data contract.",
+          "gain": [
+            "You do no work to decide.",
+            "A new operation is available at once.",
+            "The agent can do anything a person can do."
+          ],
+          "cost": [
+            "The agent can choose the wrong tool, or stop using the right one.",
+            "The tool descriptions use the agent's working memory in every session.",
+            "Some agent models cope with a long list much worse than others."
+          ],
+          "fitsWhen": [
+            "Your service has few operations.",
+            "You tested your agent model with the full list."
+          ]
+        },
+        {
+          "id": "small-fixed-set",
+          "name": "A small fixed set",
+          "summary": "You choose a short list of tools that covers the common tasks. Every agent gets the same list.",
+          "example": "Every agent gets four tools: read the glossary, list the data assets, read the rules for a data asset, and follow the links.",
+          "gain": [
+            "An agent chooses well between a few clearly named tools.",
+            "You test and document one list."
+          ],
+          "cost": [
+            "An uncommon task cannot be done.",
+            "Someone must decide the list and review it."
+          ],
+          "fitsWhen": [
+            "Most tasks are alike.",
+            "Many people with different agent tools use the service."
+          ]
+        },
+        {
+          "id": "set-per-agent",
+          "name": "A set for each agent",
+          "summary": "Each agent, or each repo, gets only the tools its job needs.",
+          "example": "The agent in the Finance Analytics repo gets the metric tools. The agent in the Data Engineering repo gets the data contract tools and the data dictionary tools.",
+          "gain": [
+            "Each agent has a short and relevant list.",
+            "An agent cannot touch a system or an environment outside its job.",
+            "It saves working memory."
+          ],
+          "cost": [
+            "You maintain a list for each agent.",
+            "The limit is set where the agent runs, and not every agent tool obeys it.",
+            "An agent fails when it is asked to do something outside its list."
+          ],
+          "fitsWhen": [
+            "You have many agents with different jobs.",
+            "A mistake in the wrong environment is costly."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "agent-write",
+          "note": "A set with no write tools makes an agent read only."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Context Plane AI Agent in a Web App",
+          "url": "https://agiledata.info/p/context-plane-ai-agent-in-a-web-app"
+        },
+        {
+          "title": "My AI Harness",
+          "url": "https://agiledata.info/p/my-ai-harness"
+        }
+      ]
+    },
+    {
+      "id": "agent-instructions",
+      "order": 14,
+      "partId": "agent-instructions",
+      "status": "draft",
+      "name": "Where agent instructions live",
+      "map": {
+        "kind": "place",
+        "at": "agent"
+      },
+      "question": "Where do the instructions for an AI agent live?",
+      "whyItMatters": "An agent needs more than definitions. It needs instructions: who it is helping, what it must never do, and how to answer. The same question gets a different answer under different instructions. You choose where those instructions are kept.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "in-each-agent",
+          "name": "In each agent",
+          "summary": "Each agent tool has its own instructions, set up by the person or team that runs it.",
+          "example": "The chatbot in the BI tool has a system prompt written by Product Analytics. A Finance Analyst's desktop agent has no instructions at all.",
+          "gain": [
+            "Each agent is tuned for its own users.",
+            "There is nothing shared to build."
+          ],
+          "cost": [
+            "The same question gets different answers from different agents.",
+            "A rule must be copied into every agent.",
+            "Nobody can see all the instructions in one place."
+          ],
+          "fitsWhen": [
+            "You have one or two agents.",
+            "Your agents serve very different users."
+          ]
+        },
+        {
+          "id": "in-the-context-plane",
+          "name": "In the Context Plane",
+          "summary": "Prompts and guardrails are stored as context, beside the definitions. Any agent that connects receives them.",
+          "example": "The Context Plane holds a guardrail: estimate effort as a T-shirt size. Every agent that connects follows it.",
+          "gain": [
+            "Any person with any agent tool gets the same response.",
+            "Instructions are changed and approved like any other context.",
+            "There is one place to see what agents are told."
+          ],
+          "cost": [
+            "An agent tool can ignore instructions that arrive this way.",
+            "One set of instructions may not suit every user.",
+            "You must design a type for prompts and guardrails."
+          ],
+          "fitsWhen": [
+            "Many agent tools read the same context.",
+            "Consistent answers matter to you."
+          ]
+        },
+        {
+          "id": "in-the-repo",
+          "name": "In the repo with the work",
+          "summary": "Instruction files live in each repo. They say who the agent is, its hard rules and how the team works. The agent reads them at the start of each session.",
+          "example": "The Data Engineering repo has a persona file, a policies file and a way-of-working file. A shared set of rules is copied into every repo.",
+          "gain": [
+            "The instructions sit beside the work and change with it in Git.",
+            "Each repo can add its own rules on top of the shared rules.",
+            "A lesson learned in one repo can be promoted to every repo."
+          ],
+          "cost": [
+            "It only works for an agent that runs in a repo.",
+            "The shared rules are copied, so a repo can fall behind.",
+            "The agent tools that business people use never see these files."
+          ],
+          "fitsWhen": [
+            "Your agents do coding or data engineering work in repos.",
+            "You have a way to keep the shared rules in step."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "agent-read",
+          "note": "Instructions in the Context Plane reach an agent through tools on request. Instructions in the repo are loaded at the start."
+        },
+        {
+          "decisionId": "change-approval",
+          "note": "Instructions in the Context Plane follow the same approval as all other context."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Things and Thing Types in the Context Plane",
+          "url": "https://agiledata.info/p/things-and-thing-types-in-the-context"
+        },
+        {
+          "title": "Context Plane AI Agent in a Web App",
+          "url": "https://agiledata.info/p/context-plane-ai-agent-in-a-web-app"
+        },
+        {
+          "title": "My AI Harness",
+          "url": "https://agiledata.info/p/my-ai-harness"
+        },
+        {
+          "title": "contextplane.ai: Use Case",
+          "url": "https://contextplane.ai/use-case/"
+        }
+      ]
+    },
+    {
+      "id": "interfaces",
+      "order": 15,
+      "partId": "interfaces",
+      "status": "draft",
+      "name": "The ways in to context",
+      "map": {
+        "kind": "flow",
+        "at": "interfaces"
+      },
+      "question": "How do people and systems work with your context?",
+      "whyItMatters": "Four kinds of user need context. A person who prefers a screen. A person who prefers code. Another system. An AI agent that works with other agents. One way of working does not suit all four. You choose which ones you serve first, and how.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "app-first",
+          "name": "An app first",
+          "summary": "People browse, search and change context in a web app, such as a data catalogue. Other ways in come later.",
+          "example": "A Customer Success Manager opens the catalogue, searches for churn and reads the definition.",
+          "gain": [
+            "Anyone can use it with no training in code or agents.",
+            "It can show context as maps and diagrams, which helps people understand it."
+          ],
+          "cost": [
+            "An app costs a lot to build and to keep.",
+            "People who prefer code find it slow.",
+            "Systems and agents are not served."
+          ],
+          "fitsWhen": [
+            "Most of the people who write context do not write code.",
+            "You already have a catalogue app."
+          ]
+        },
+        {
+          "id": "agent-tool-first",
+          "name": "An AI agent tool first",
+          "summary": "There is no app. People use the AI agent tool they already have, connected to the context service.",
+          "example": "A Data Engineer asks their desktop agent to list the Stripe data assets and describe the invoice fields.",
+          "gain": [
+            "You build nothing for the screen.",
+            "People ask in their own words. They do not need to know where to click.",
+            "People choose their own tool."
+          ],
+          "cost": [
+            "For a person who knows the app, typing a question is slower than two clicks.",
+            "Different agent tools give answers of different quality.",
+            "People with no paid agent tool are left out."
+          ],
+          "fitsWhen": [
+            "Your people already use agent tools every day.",
+            "You want to learn what people ask before you build screens."
+          ]
+        },
+        {
+          "id": "one-api-many-ways-in",
+          "name": "One API, many ways in",
+          "summary": "One API holds all the rules for reading and writing context. An app, a chatbot, a command line tool, an MCP server and other systems all use that API.",
+          "example": "The catalogue app, the in-app chatbot and the MCP server all call the same API to read the definition of MRR.",
+          "gain": [
+            "Each kind of user gets the way of working that suits them.",
+            "A rule is written once and applies to every way in.",
+            "A new way in is cheap to add."
+          ],
+          "cost": [
+            "You must design the API first, and that takes discipline.",
+            "You keep several front ends working.",
+            "Each way in can still behave a little differently, for example with a different prompt."
+          ],
+          "fitsWhen": [
+            "You serve people, systems and agents.",
+            "You expect new kinds of agent tool to appear."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "agent-read",
+          "note": "An AI agent tool first means the agent reads context through tools on request."
+        },
+        {
+          "decisionId": "agent-instructions",
+          "note": "With many ways in, each way in can carry its own instructions unless they live in the Context Plane."
+        }
+      ],
+      "sources": [
+        {
+          "title": "UX Patterns for the Context Plane",
+          "url": "https://agiledata.info/p/ux-patterns-for-the-context-plane"
+        },
+        {
+          "title": "Context Plane AI Agent in a Web App",
+          "url": "https://agiledata.info/p/context-plane-ai-agent-in-a-web-app"
+        },
+        {
+          "title": "contextplane.ai: Pricing",
+          "url": "https://contextplane.ai/pricing/"
+        }
+      ]
+    },
+    {
+      "id": "context-visibility",
+      "order": 16,
+      "partId": "access-control",
+      "status": "draft",
+      "name": "Who sees which context",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "Who can see which context?",
+      "whyItMatters": "Context can be sensitive. A column description can show that you hold salary data. A metric formula can show how you set prices. An agent passes on whatever it can read. You choose how you limit what each person and each agent can see.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "open-inside",
+          "name": "Open to everyone inside",
+          "summary": "Everyone in the organisation, and every agent they run, can read all context. Only the data is protected.",
+          "example": "A Customer Success Manager can read the definition and the formula of every Finance metric. They cannot query the invoice table.",
+          "gain": [
+            "People find out what exists, and then ask for access to it.",
+            "There is one simple rule.",
+            "An agent can tell anyone what data you hold."
+          ],
+          "cost": [
+            "Sensitive names and rules are visible.",
+            "It does not suit context that belongs to customers or partners."
+          ],
+          "fitsWhen": [
+            "Your context holds no secrets.",
+            "You want people to discover data."
+          ]
+        },
+        {
+          "id": "same-as-data",
+          "name": "Same rules as the data",
+          "summary": "You can see the context for a piece of data only if you can see the data.",
+          "example": "Only people in Finance Analytics can read raw.stripe.invoices, so only they see its columns and its rules.",
+          "gain": [
+            "There is no second set of rules.",
+            "Nothing that the data rules hide can leak through context."
+          ],
+          "cost": [
+            "People cannot discover data they do not already have.",
+            "Business context such as a glossary term has no data to borrow rules from.",
+            "The Context Plane must read the rules from each data system."
+          ],
+          "fitsWhen": [
+            "Your data rules are well kept.",
+            "Most of your context is technical detail about tables."
+          ]
+        },
+        {
+          "id": "context-policies",
+          "name": "Policies for context",
+          "summary": "You write policies that say which persona or team can do what to which context.",
+          "example": "One policy allows the Finance Analyst persona to read anything classified as Financial. A second policy denies the Product Analyst persona the invoice fields.",
+          "gain": [
+            "It is precise. A term, a column and a value can each have a rule.",
+            "It covers context that has no data behind it.",
+            "A policy is context too, so an agent can explain why access was denied."
+          ],
+          "cost": [
+            "You write and maintain a second set of rules.",
+            "The context rules and the data rules can disagree.",
+            "Someone must classify the context."
+          ],
+          "fitsWhen": [
+            "Some of your context is sensitive and some is not.",
+            "A regulator requires you to show who can see what."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-location",
+          "note": "With a federated pattern each place has its own access rules, so one set of policies is hard to apply."
+        },
+        {
+          "decisionId": "agent-read",
+          "note": "Rules for each person need tools on request, because each call can be checked."
+        }
+      ],
+      "sources": []
+    },
+    {
+      "id": "live-signals",
+      "order": 17,
+      "partId": "live-signals",
+      "status": "draft",
+      "name": "Live signals",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "Do you keep live signals with your context?",
+      "whyItMatters": "A definition tells an agent what a number means. A live signal tells the agent whether to trust the number today. It says when the data last loaded, whether its checks passed, and who uses it. You choose whether those signals sit with the context.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "definitions-only",
+          "name": "Definitions only",
+          "summary": "The Context Plane holds definitions, rules and models. It holds nothing that changes with each data load.",
+          "example": "The Context Plane says that the invoices table must load every hour. It does not say whether the table loaded this hour.",
+          "gain": [
+            "Context changes only when a person changes it, so it stays small and simple.",
+            "You need no feed from the systems that run the data work."
+          ],
+          "cost": [
+            "An agent cannot tell that data is late or failed its checks.",
+            "People must look in a second tool."
+          ],
+          "fitsWhen": [
+            "Your agents design and explain. They do not answer questions with live data.",
+            "You already have a good monitoring tool."
+          ]
+        },
+        {
+          "id": "signals-stored",
+          "name": "Signals stored with the context",
+          "summary": "The systems that run the data work send their latest results to the Context Plane: quality scores, load times, row counts and usage.",
+          "example": "The record for raw.stripe.invoices shows that it loaded at 09:00, holds 1,204,331 rows and passed 11 of 12 checks.",
+          "gain": [
+            "An agent can warn that a number may be wrong.",
+            "People see meaning and health in one place.",
+            "Usage shows which context is worth keeping."
+          ],
+          "cost": [
+            "Every system must send its results after every run.",
+            "The Context Plane holds a lot of data that changes fast.",
+            "A signal that stops arriving can look the same as good news."
+          ],
+          "fitsWhen": [
+            "Your agents answer business questions with live data.",
+            "Your pipelines can report their results."
+          ]
+        },
+        {
+          "id": "signals-linked",
+          "name": "Signals linked",
+          "summary": "The Context Plane stores a link to the place where each signal lives. An agent follows the link when it needs the signal.",
+          "example": "The record for raw.stripe.invoices links to its page in the monitoring tool. The agent calls that tool to read the latest load time.",
+          "gain": [
+            "There is no copy, so the signal is never out of date.",
+            "The Context Plane stays small."
+          ],
+          "cost": [
+            "The agent needs access to a second system.",
+            "Each monitoring tool answers in a different way.",
+            "There is no single view of health."
+          ],
+          "fitsWhen": [
+            "Your monitoring tool has its own service for agents.",
+            "Your signals change very often."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-capture",
+          "note": "Signals stored with the context need a push from every system that runs data work."
+        },
+        {
+          "decisionId": "context-first",
+          "note": "Live signals are operational context, so they only matter once you capture that category."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Background to the pattern of the Context Plane",
+          "url": "https://agiledata.info/p/background-to-the-pattern-of-the"
+        },
+        {
+          "title": "Things and Thing Types in the Context Plane",
+          "url": "https://agiledata.info/p/things-and-thing-types-in-the-context"
+        }
+      ]
+    },
+    {
+      "id": "context-role",
+      "order": 18,
+      "partId": "execution",
+      "status": "draft",
+      "name": "Context describes or drives",
+      "map": {
+        "kind": "place",
+        "at": "plane"
+      },
+      "question": "Does your context describe the data work, or drive it?",
+      "whyItMatters": "Context can be a record that is written after the work is done. It can also be the thing the work is built from. The difference decides whether your context can go out of date.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "context-as-record",
+          "name": "Context as a record",
+          "alsoCalled": [
+            "Data catalogue",
+            "Documentation"
+          ],
+          "summary": "The work is done in other tools. Context is collected or written afterwards to describe it.",
+          "example": "Data Engineering writes the SQL that calculates MRR. Later, the catalogue reads the SQL and somebody adds a description.",
+          "gain": [
+            "It works with the tools and the code you already have.",
+            "No team changes how it builds."
+          ],
+          "cost": [
+            "Context can be missing or wrong and nothing breaks, so nobody notices.",
+            "Writing it feels like extra work, so people skip it.",
+            "An agent cannot fully trust it."
+          ],
+          "fitsWhen": [
+            "You have a large amount of existing code.",
+            "You cannot change how your teams build."
+          ]
+        },
+        {
+          "id": "context-as-fuel",
+          "name": "Context as fuel",
+          "alsoCalled": [
+            "Metadata driven",
+            "Model driven",
+            "Config driven"
+          ],
+          "summary": "The work is generated from the context. Nothing can be built or run until its context exists.",
+          "example": "A person defines the MRR rule as context. The platform generates the SQL from it, runs the SQL and then throws the code away.",
+          "gain": [
+            "Context cannot be out of date, because it is the thing that runs.",
+            "You define a rule once and show it many ways: on a screen, in plain language, as SQL.",
+            "Code is cheap to throw away and generate again."
+          ],
+          "cost": [
+            "You need a platform that generates the work from context.",
+            "Everything must fit the patterns that the generator knows.",
+            "It is hard to adopt on top of code that already exists."
+          ],
+          "fitsWhen": [
+            "You are building a new platform, or you are willing to rebuild.",
+            "Your work follows patterns that repeat."
+          ]
+        },
+        {
+          "id": "context-as-check",
+          "name": "Context as a check",
+          "alsoCalled": [
+            "Data contract"
+          ],
+          "summary": "People write the code by hand. The context states what must be true, and automated checks compare the work against it.",
+          "example": "The Stripe invoices data contract says that the amount field is never empty. A check fails the pipeline when it is empty.",
+          "gain": [
+            "You keep your code and your tools.",
+            "Out-of-date context is found when a check fails.",
+            "You can start with one contract."
+          ],
+          "cost": [
+            "It covers only the things you write checks for.",
+            "You maintain two things: the code and the context.",
+            "When a check fails, someone must decide which side is wrong."
+          ],
+          "fitsWhen": [
+            "You have hand-written code that you intend to keep.",
+            "The team that produces the data and the team that uses it are different teams."
+          ]
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "object-types",
+          "note": "Context as fuel needs fixed types, because the generator must know the shape."
+        },
+        {
+          "decisionId": "context-capture",
+          "note": "Context as fuel means context is written in place first. Harvest does not apply."
+        },
+        {
+          "decisionId": "context-format",
+          "note": "Free text in files cannot drive code generation reliably."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Background to the pattern of the Context Plane",
+          "url": "https://agiledata.info/p/background-to-the-pattern-of-the"
+        }
+      ]
+    },
+    {
+      "id": "agent-execution",
+      "order": 19,
+      "partId": "execution",
+      "status": "draft",
+      "name": "Where agents run tasks",
+      "map": {
+        "kind": "flow",
+        "at": "run"
+      },
+      "question": "Where does an AI agent run its task after it has the context?",
+      "whyItMatters": "Context tells an agent where the data is and what it means. The agent must then run something: a query, an update or a report. You choose whether the Context Plane takes part in that step.",
+      "noGoodPracticeYet": "There is no agreed good practice for this yet. Teams are still experimenting. Each pattern below works for somebody.",
+      "patterns": [
+        {
+          "id": "system-services",
+          "name": "Each system's own service",
+          "summary": "The agent reads the context, then calls the service of the system that holds the data. The Context Plane runs nothing.",
+          "example": "The agent learns from the context that open invoices live in Stripe. It calls the Stripe service to fetch them.",
+          "gain": [
+            "The Context Plane stays simple. It holds context and no data.",
+            "Each system applies its own security.",
+            "The agent can reach data that never arrives in the data platform."
+          ],
+          "cost": [
+            "Every system must provide a service for agents.",
+            "The agent must handle many services that behave in different ways.",
+            "There is no single place to see or limit what agents ran."
+          ],
+          "fitsWhen": [
+            "Your systems already provide services for agents.",
+            "You do not want the Context Plane to hold data."
+          ],
+          "mapEffect": "run-systems"
+        },
+        {
+          "id": "central-service",
+          "name": "One central service",
+          "summary": "The agent reads the context, then sends every task to one service. That service talks to the systems.",
+          "example": "The agent asks the central service for open invoices. The service decides to read them from BigQuery and returns the rows.",
+          "gain": [
+            "You secure, log and limit agent work in one place.",
+            "The agent learns one service.",
+            "A system with no service of its own can still be reached."
+          ],
+          "cost": [
+            "You build and run a service that connects to every system.",
+            "It becomes a bottleneck and a single point of failure."
+          ],
+          "fitsWhen": [
+            "You must audit every action an agent takes.",
+            "Few of your systems have their own service."
+          ],
+          "mapEffect": "run-central"
+        },
+        {
+          "id": "context-plane-runs",
+          "name": "The Context Plane runs it",
+          "alsoCalled": [
+            "Semantic layer"
+          ],
+          "summary": "The place that holds the context also runs the query. It turns a question into SQL, runs it on the data platform and returns the answer.",
+          "example": "A CFO asks for MRR by month. The semantic layer builds the SQL from the MRR definition, runs it in BigQuery and returns twelve numbers.",
+          "gain": [
+            "The definition and the calculation cannot differ.",
+            "The agent needs one connection for the meaning and for the answer.",
+            "A cache can make it fast."
+          ],
+          "cost": [
+            "The Context Plane must reach the data, with all the security that brings.",
+            "It only works for data in the platform it is connected to.",
+            "It is a bigger product to build: a query engine, a cache and access to data."
+          ],
+          "fitsWhen": [
+            "Most of your questions are metrics from the data platform.",
+            "You already run a BI semantic layer."
+          ],
+          "mapEffect": "run-plane"
+        }
+      ],
+      "agiledataChoice": {
+        "patternId": "",
+        "why": "",
+        "confirmed": false
+      },
+      "limits": [
+        {
+          "decisionId": "context-coverage",
+          "note": "If the Context Plane runs the query, it covers only the data platform it is connected to."
+        },
+        {
+          "decisionId": "context-visibility",
+          "note": "If each system runs the task, each system applies its own data rules, and the Context Plane only needs rules for context."
+        }
+      ],
+      "sources": [
+        {
+          "title": "The new AI Data Stack",
+          "url": "https://agiledata.info/p/the-new-ai-data-stack"
+        },
+        {
+          "title": "UX Patterns for the Context Plane",
+          "url": "https://agiledata.info/p/ux-patterns-for-the-context-plane"
+        }
+      ]
+    }
+  ]
+}
