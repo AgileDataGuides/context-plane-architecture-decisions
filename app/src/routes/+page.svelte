@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
-	import { createDecisionsStore, readImport } from '$lib/stores/decisions.svelte';
-	import { decisions, parts } from '$lib/data';
-	import { exportPayload } from '$lib/model/tradeoffs';
-	import { buildSteps, stepsTabLabel } from '$lib/model/steps';
-	import { APP } from '$lib/canon/instructions';
-	import { BUTTON, HEADER, TAB, TEXT } from '$lib/ui/tokens';
-	import type { DecisionActions } from '$lib/types';
-	import Toolbar from '$lib/components/Toolbar.svelte';
-	import StepsView from '$lib/components/canvas/StepsView.svelte';
-	import MapTab from '$lib/components/MapTab.svelte';
-	import DecisionsTab from '$lib/components/DecisionsTab.svelte';
-	import Instructions from '$lib/components/Instructions.svelte';
+	import { createDecisionsStore, readImport } from '#lib/stores/decisions.svelte.ts';
+	import { decisions, parts } from '#lib/data/index.ts';
+	import { exportPayload } from '#lib/model/tradeoffs.ts';
+	import { buildSteps, stepsTabLabel } from '#lib/model/steps.ts';
+	import { APP } from '#lib/canon/instructions.ts';
+	import { BUTTON, HEADER, TAB, TEXT } from '#lib/ui/tokens.ts';
+	import type { DecisionActions } from '#lib/types.ts';
+	import Toolbar from '#lib/components/Toolbar.svelte';
+	import StepsView from '#lib/components/canvas/StepsView.svelte';
+	import MapTab from '#lib/components/MapTab.svelte';
+	import DecisionsTab from '#lib/components/DecisionsTab.svelte';
+	import Instructions from '#lib/components/Instructions.svelte';
 
 	// The architectures live in this browser's localStorage
 	const store = createDecisionsStore();

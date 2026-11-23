@@ -31,7 +31,7 @@ Run `./start-context-plane-architecture-decisions.sh` from the terminal.
 
 The app starts at [http://localhost:5125](http://localhost:5125).
 
-**Requires**: [Node.js](https://nodejs.org/) 20.19+, 22.12+, or 24+ (not 21 or 23).
+**Requires**: [Node.js](https://nodejs.org/) 22.17+ or 24+ (not 23).
 
 ## Features
 

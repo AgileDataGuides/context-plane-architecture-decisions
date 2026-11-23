@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { APP } from '$lib/canon/instructions';
+	import { APP } from '#lib/canon/instructions.ts';
 	let { children } = $props();
 </script>
 
